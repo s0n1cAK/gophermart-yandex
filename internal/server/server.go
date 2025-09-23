@@ -54,10 +54,14 @@ func userRoutes(svc gophermart.Service) chi.Router {
 	r.Group(func(r chi.Router) {
 		r.Use(auth.Middleware(svc))
 		r.Post("/orders", httpx.CreateOrder(svc))
-		r.Get("/orders", httpx.GetOrders(svc))
 		r.Get("/balance", httpx.GetBalance(svc))
 		r.Post("/balance/withdraw", httpx.CreateWithdraw(svc))
-		r.Get("/withdrawals", httpx.GetWithdraws(svc))
+		r.Group(func(r chi.Router) {
+			r.Use(gzipCompession())
+			r.Get("/withdrawals", httpx.GetWithdraws(svc))
+			r.Get("/orders", httpx.GetOrders(svc))
+		})
+
 	})
 
 	return r
