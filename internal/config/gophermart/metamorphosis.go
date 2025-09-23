@@ -27,6 +27,21 @@ func metamorphosis(cfg initConfig) (Config, error) {
 		return Config{}, fmt.Errorf("%s: invalid server address: missing scheme or host", op)
 	}
 
+	if address.Hostname() == "" {
+		return Config{}, fmt.Errorf("%s: invalid server address: missing hostname", op)
+	}
+
+	portStr := address.Port()
+	if portStr != "" {
+		port, err := strconv.Atoi(portStr)
+		if err != nil {
+			return Config{}, fmt.Errorf("%s: invalid server address: bad port %q", op, portStr)
+		}
+		if port < minPort || port > maxPort {
+			return Config{}, fmt.Errorf("%s: invalid server address: port out of range (%d)", op, port)
+		}
+	}
+
 	if !strings.Contains(cfg.Address, "://") {
 		cfg.AccuralAddress = "http://" + cfg.AccuralAddress
 	}
@@ -34,19 +49,28 @@ func metamorphosis(cfg initConfig) (Config, error) {
 	if err != nil {
 		return Config{}, fmt.Errorf("%s: invalid accurual address: %w", op, err)
 	}
+
 	if accurualAddress.Scheme == "" {
 		accurualAddress.Scheme = "http"
 	}
+
 	if accurualAddress.Host == "" {
 		return Config{}, fmt.Errorf("%s: invalid accurual address: missing scheme or host", op)
 	}
 
-	port, err := strconv.Atoi(address.Port())
-	if err != nil {
-		return Config{}, fmt.Errorf("%s: invalid server address: bad port %q", op, address.Port())
+	if accurualAddress.Hostname() == "" {
+		return Config{}, fmt.Errorf("%s: invalid accurual address: missing hostname", op)
 	}
-	if port < minPort || port > maxPort {
-		return Config{}, fmt.Errorf("%s: invalid server address: port out of range (%d)", op, port)
+
+	portStr = accurualAddress.Port()
+	if portStr != "" {
+		port, err := strconv.Atoi(portStr)
+		if err != nil {
+			return Config{}, fmt.Errorf("%s: invalid server address: bad port %q", op, portStr)
+		}
+		if port < minPort || port > maxPort {
+			return Config{}, fmt.Errorf("%s: invalid server address: port out of range (%d)", op, port)
+		}
 	}
 
 	database, err := url.ParseRequestURI(cfg.DatabaseURI)
