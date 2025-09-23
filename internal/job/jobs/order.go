@@ -10,6 +10,13 @@ import (
 	"go.uber.org/zap"
 )
 
+const (
+	StatusRegistered = "REGISTERED"
+	StatusProcessing = "PROCESSING"
+	StatusInvalid    = "INVALID"
+	StatusProcessed  = "PROCESSED"
+)
+
 type OrderJob struct {
 	Order     models.Order
 	Throttler *job.Throttler
@@ -36,11 +43,11 @@ func (j *OrderJob) Process(ctx context.Context, svc job.Service, logger *zap.Log
 	}
 
 	switch ext.Status {
-	case "REGISTERED", "PROCESSING":
+	case StatusRegistered, StatusProcessing:
 		return nil
-	case "INVALID":
+	case StatusInvalid:
 		return svc.UpdateOrderInvalid(ctx, j.Order)
-	case "PROCESSED":
+	case StatusProcessed:
 		err = svc.UpdateOrderProcessed(ctx, j.Order, ext.Accrual)
 		if err != nil {
 			return err
